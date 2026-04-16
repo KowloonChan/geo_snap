@@ -5,14 +5,14 @@
  Description: an applications that allows users to post, view, like blog posts with photos
  */
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sqflite/sqflite.dart';
 
 import 'package:geo_snap/models/category.dart';
 import 'package:geo_snap/models/photo.dart';
 import 'package:geo_snap/models/post.dart';
 import 'package:geo_snap/models/user.dart';
-import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart';
 
 class DatabaseService {
   static Database? _db;
@@ -185,6 +185,41 @@ class DatabaseService {
       }
     } catch (e) {
       debugPrint("ERROR in authenticateUser: $e");
+      return null;
+    }
+  }
+
+  // For testing only - get the first user (admin) and set it as the current user
+  // TODO: it should select the login user based on the authenticateUser() result
+  static Future<User?> getUser() async {
+    try {
+      var db = await getDatabase();
+      var data = await db.query(
+        'users',
+        where: 'userId = ?',
+        whereArgs: [1],
+        limit: 1,
+      );
+      debugPrint("First user retrieved successfully");
+      return data.isNotEmpty ? User.fromMap(data.first) : null;
+    } catch (e) {
+      debugPrint("ERROR in getUser: $e");
+      return null;
+    }
+  }
+
+  // Update user information in the database when the user edits their profile
+  static Future<int?> updateUser(User user) async {
+    try {
+      var db = await getDatabase();
+      return db.update(
+        'users',
+        user.toMap(),
+        where: 'userId = ?',
+        whereArgs: [user.userId],
+      );
+    } catch (e) {
+      debugPrint("ERROR in updateUser: $e");
       return null;
     }
   }

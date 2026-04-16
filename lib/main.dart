@@ -7,6 +7,7 @@ Description: An applications that allows users to post, view, like blog posts wi
 import "package:flutter/material.dart";
 import 'package:geo_snap/pages/add_page.dart';
 import 'package:geo_snap/pages/home_page.dart';
+import 'package:geo_snap/pages/login_page.dart';
 import 'package:geo_snap/pages/profile_page.dart';
 import 'package:geo_snap/services/database_service.dart';
 
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: MainScreen());
+    return MaterialApp(home: LoginPage());
   }
 }
 

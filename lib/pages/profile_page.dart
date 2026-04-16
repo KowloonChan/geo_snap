@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:reactive_forms/reactive_forms.dart';
+
 import 'package:geo_snap/services/database_service.dart';
+import 'package:geo_snap/models/category.dart';
 import 'package:geo_snap/models/user.dart';
-import 'package:geo_snap/models/post.dart';
+import 'package:geo_snap/pages/login_page.dart';
+import 'package:geo_snap/pages/testing_page.dart';
 
 class ProfilePage extends StatefulWidget {
   ProfilePage({super.key});
@@ -11,340 +16,212 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  String _testOutput = "No tests run yet";
+  // Save the userId for update databsase
+  int? userId;
 
-  Future<void> _testSelectAllUsers() async {
-    try {
-      final users = await DatabaseService.selectAllUsers();
-      debugPrint("\n=== TEST: selectAllUsers ===");
-      if (users != null) {
-        debugPrint("✓ Found ${users.length} users");
-        for (var user in users) {
-          debugPrint(
-            "  • ${user.username} (ID: ${user.userId}, Age: ${user.age})",
-          );
-        }
-        setState(() {
-          _testOutput = "✓ Found ${users.length} users";
-        });
-      } else {
-        debugPrint("✗ Returned null");
-        setState(() {
-          _testOutput = "✗ selectAllUsers returned null";
-        });
-      }
-    } catch (e) {
-      debugPrint("✗ Exception: $e");
-      setState(() {
-        _testOutput = "✗ Exception: $e";
-      });
-    }
+  // The profile page with a form to display username, age, gender, and topic preference of the current user retrived from shared preferences, and allow the user to edit and save the information back to the database and shared preferences
+  // Form controls
+  FormGroup form = FormGroup({
+    "userName": FormControl<String>(
+      validators: [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(20),
+      ],
+      value: "",
+    ),
+    "password": FormControl<String>(
+      validators: [
+        Validators.required,
+        Validators.minLength(6),
+        Validators.maxLength(20),
+      ],
+      value: "",
+    ),
+    "age": FormControl<int>(
+      validators: [
+        Validators.required,
+        Validators.min(15),
+        Validators.max(100),
+      ],
+      value: null,
+    ),
+    "gender": FormControl<String>(validators: [Validators.required], value: ""),
+    "topicPreference": FormControl<String>(
+      validators: [Validators.required],
+      value: "",
+    ),
+  });
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentUser();
   }
 
-  Future<void> _testSelectAllCategories() async {
-    try {
-      final categories = await DatabaseService.selectAllCategories();
-      debugPrint("\n=== TEST: selectAllCategories ===");
-      if (categories != null) {
-        debugPrint("✓ Found ${categories.length} categories");
-        for (var category in categories) {
-          debugPrint("  • ${category.categoryName}");
-        }
-        setState(() {
-          _testOutput = "✓ Found ${categories.length} categories";
-        });
-      } else {
-        debugPrint("✗ Returned null");
-        setState(() {
-          _testOutput = "✗ selectAllCategories returned null";
-        });
-      }
-    } catch (e) {
-      debugPrint("✗ Exception: $e");
-      setState(() {
-        _testOutput = "✗ Exception: $e";
-      });
-    }
+  // Get current user information from shared preferences
+  Future<void> _loadCurrentUser() async {
+    var prefs = await SharedPreferences.getInstance();
+    String userName = prefs.getString('userName')!;
+    String password = prefs.getString('password')!;
+    int age = prefs.getInt('age')!;
+    String gender = prefs.getString('gender')!;
+    String topicPreference = prefs.getString('topicPreference')!;
+    userId = prefs.getInt('userId')!;
+
+    form.control('userName').value = userName;
+    form.control('password').value = password;
+    form.control('age').value = age;
+    form.control('gender').value = gender;
+    form.control('topicPreference').value = topicPreference;
   }
 
-  Future<void> _testSelectAllPosts() async {
-    try {
-      final posts = await DatabaseService.selectAllPosts();
-      debugPrint("\n=== TEST: selectAllPosts ===");
-      if (posts != null) {
-        debugPrint("✓ Found ${posts.length} posts");
-        for (var post in posts) {
-          debugPrint(
-            "  • \"${post.title}\" (ID: ${post.postId}, User: ${post.userId})",
-          );
-        }
-        setState(() {
-          _testOutput = "✓ Found ${posts.length} posts";
-        });
-      } else {
-        debugPrint("✗ Returned null");
-        setState(() {
-          _testOutput = "✗ selectAllPosts returned null";
-        });
-      }
-    } catch (e) {
-      debugPrint("✗ Exception: $e");
-      setState(() {
-        _testOutput = "✗ Exception: $e";
-      });
-    }
-  }
-
-  Future<void> _testInsertUser() async {
-    try {
-      final newUser = User(
-        userId: 0,
-        username: "testuser_${DateTime.now().millisecondsSinceEpoch}",
-        password: "testpass123",
-        age: 20,
-        gender: "Other",
-        topicPreference: "General",
-      );
-      debugPrint("\n=== TEST: insertUser ===");
-      debugPrint("Inserting user: ${newUser.username}");
-      await DatabaseService.insertUser(newUser);
-      debugPrint("✓ User inserted successfully");
-      setState(() {
-        _testOutput = "✓ User inserted: ${newUser.username}";
-      });
-    } catch (e) {
-      debugPrint("✗ Exception: $e");
-      setState(() {
-        _testOutput = "✗ Exception: $e";
-      });
-    }
-  }
-
-  Future<void> _testAuthenticateUser() async {
-    try {
-      debugPrint("\n=== TEST: authenticateUser ===");
-      debugPrint("Authenticating: admin / admin123");
-      final user = await DatabaseService.authenticateUser(
-        username: "admin",
-        password: "admin123",
-      );
-      if (user != null) {
-        debugPrint("✓ Authentication successful!");
-        debugPrint("  • Username: ${user.username}");
-        debugPrint("  • User ID: ${user.userId}");
-        debugPrint("  • Age: ${user.age}, Gender: ${user.gender}");
-        setState(() {
-          _testOutput = "✓ Auth successful: ${user.username}";
-        });
-      } else {
-        debugPrint("✗ Authentication failed - credentials not found or error");
-        setState(() {
-          _testOutput = "✗ Auth failed";
-        });
-      }
-    } catch (e) {
-      debugPrint("✗ Exception: $e");
-      setState(() {
-        _testOutput = "✗ Exception: $e";
-      });
-    }
-  }
-
-  Future<void> _testSelectPostsWithCategoryAndUser() async {
-    try {
-      debugPrint("\n=== TEST: selectPostsWithCategoryAndUser ===");
-      final results = await DatabaseService.selectPostsWithCategoryAndUser();
-      if (results != null) {
-        debugPrint(
-          "✓ Found ${results.length} posts with category and user info",
-        );
-        for (var result in results) {
-          debugPrint(
-            "  • \"${result['title']}\" by ${result['username']} in ${result['categoryName']}",
-          );
-        }
-        setState(() {
-          _testOutput = "✓ Found ${results.length} posts with details";
-        });
-      } else {
-        debugPrint("✗ Returned null");
-        setState(() {
-          _testOutput = "✗ selectPostsWithCategoryAndUser returned null";
-        });
-      }
-    } catch (e) {
-      debugPrint("✗ Exception: $e");
-      setState(() {
-        _testOutput = "✗ Exception: $e";
-      });
-    }
-  }
-
-  Future<void> _testClearAllData() async {
-    try {
-      debugPrint("\n=== TEST: clearAllData ===");
-      debugPrint("Clearing all data from database...");
-      await DatabaseService.clearAllData();
-      debugPrint("✓ All data cleared successfully");
-      setState(() {
-        _testOutput = "✓ All data cleared";
-      });
-    } catch (e) {
-      debugPrint("✗ Exception: $e");
-      setState(() {
-        _testOutput = "✗ Exception: $e";
-      });
-    }
-  }
-
+  // Display the current user's information in a form and allow the user to edit and save the information back to the database and shared preferences
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Profile & Database Tests"),
-        backgroundColor: Colors.blue.shade700,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12.0),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                border: Border.all(color: Colors.blue.shade200),
-                borderRadius: BorderRadius.circular(8),
+      appBar: AppBar(title: Text("Profile")),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: ReactiveForm(
+          formGroup: form,
+          child: Column(
+            children: [
+              ReactiveTextField<String>(
+                formControlName: 'userName',
+                decoration: InputDecoration(labelText: 'Username'),
+                validationMessages: {
+                  "required": (err) => "Username is required",
+                  "minLength": (err) =>
+                      "Username must be at least 2 characters long",
+                  "maxLength": (err) =>
+                      "Username must be at most 20 characters long",
+                },
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Last Test Output:",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _testOutput,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "(Check Debug Console for detailed output)",
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
+
+              ReactiveTextField<String>(
+                formControlName: 'password',
+                decoration: InputDecoration(labelText: 'Password'),
+                obscureText: true,
+                validationMessages: {
+                  "required": (err) => "Password is required",
+                  "minLength": (err) =>
+                      "Password must be at least 6 characters long",
+                  "maxLength": (err) =>
+                      "Password must be at most 20 characters long",
+                },
+              ),
+
+              ReactiveTextField<int>(
+                formControlName: 'age',
+                decoration: InputDecoration(labelText: 'Age'),
+                keyboardType: TextInputType.number,
+                validationMessages: {
+                  "required": (err) => "Age is required",
+                  "min": (err) => "Age must be at least 15",
+                  "max": (err) => "Age must be at most 100",
+                },
+              ),
+
+              ReactiveDropdownField<String>(
+                formControlName: 'gender',
+                decoration: InputDecoration(labelText: 'Gender'),
+                items: [
+                  DropdownMenuItem(value: "Male", child: Text("Male")),
+                  DropdownMenuItem(value: "Female", child: Text("Female ")),
+                  DropdownMenuItem(value: "Other", child: Text("Other")),
                 ],
+                validationMessages: {"required": (err) => "Gender is required"},
               ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "Read Tests",
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
+
+              ReactiveDropdownField<String>(
+                formControlName: 'topicPreference',
+                decoration: const InputDecoration(
+                  labelText: "Topic Preference",
+                  border: OutlineInputBorder(),
+                ),
+                items: BlogCategory.categoryNames.asMap().entries.map((entry) {
+                  return DropdownMenuItem<String>(
+                    value: entry.value,
+                    child: Text(entry.value),
+                  );
+                }).toList(),
               ),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _testSelectAllUsers,
-              child: const Text("Test: Select All Users"),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _testSelectAllCategories,
-              child: const Text("Test: Select All Categories"),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _testSelectAllPosts,
-              child: const Text("Test: Select All Posts"),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _testSelectPostsWithCategoryAndUser,
-              child: const Text("Test: Select Posts with Details (JOIN)"),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "Write Tests",
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
+
+              SizedBox(height: 20),
+
+              ElevatedButton(
+                onPressed: () async {
+                  if (form.valid) {
+                    // Build the updated User object
+                    User updatedUser = User(
+                      userId: userId,
+                      username: form.control('userName').value as String,
+                      password: form.control('password').value as String,
+                      age: form.control('age').value as int,
+                      gender: form.control('gender').value as String,
+                      topicPreference:
+                          form.control('topicPreference').value as String,
+                    );
+
+                    // Update the database
+                    await DatabaseService.updateUser(updatedUser);
+
+                    // Update SharedPreferences (changed final to var)
+                    var prefs = await SharedPreferences.getInstance();
+                    await prefs.setString('userName', updatedUser.username);
+                    await prefs.setString('password', updatedUser.password);
+                    await prefs.setInt('age', updatedUser.age);
+                    await prefs.setString('gender', updatedUser.gender);
+                    await prefs.setString(
+                      'topicPreference',
+                      updatedUser.topicPreference,
+                    );
+
+                    // Show success feedback to the user safely
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Profile updated successfully!"),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  } else {
+                    // Highlight invalid fields if the user tries to save early
+                    form.markAllAsTouched();
+                  }
+                },
+                child: Text("Save Changes"),
               ),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _testInsertUser,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade600,
+
+              // A logout button to clear the current user's information from shared preferences and navigate back to the login page
+              ElevatedButton(
+                onPressed: () async {
+                  var prefs = await SharedPreferences.getInstance();
+                  await prefs.clear();
+                  if (!context.mounted) return;
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                  );
+                },
+                child: Text("Logout"),
               ),
-              child: const Text(
-                "Test: Insert New User",
-                style: TextStyle(color: Colors.white),
+
+              // A button go to the testing page to test database operations, to be deleted in the final version
+              // TODO: delete this button and the testing page after testing is done
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => TestingPage()),
+                  );
+                },
+                child: Text("Go to Testing Page"),
               ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "Auth Tests",
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.orange,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _testAuthenticateUser,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange.shade600,
-              ),
-              child: const Text(
-                "Test: Authenticate Admin",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "Destructive Tests",
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _testClearAllData,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade600,
-              ),
-              child: const Text(
-                "Test: Clear All Data",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12.0),
-              decoration: BoxDecoration(
-                color: Colors.amber.shade50,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Text(
-                "⚠ Note: Detailed output is printed to Debug Console. Open Debug Console (Ctrl+Shift+Y or View > Debug Console) to see all test results.",
-                style: TextStyle(fontSize: 12),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
