@@ -10,6 +10,7 @@ import 'package:geo_snap/pages/home_page.dart';
 import 'package:geo_snap/pages/login_page.dart';
 import 'package:geo_snap/pages/profile_page.dart';
 import 'package:geo_snap/services/database_service.dart';
+import 'package:geo_snap/pages/splash_screen.dart';
 
 Future<void> main() async {
   // Initialize the database before running the app
@@ -24,7 +25,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: LoginPage());
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: SplashScreen(),
+    );
   }
 }
 

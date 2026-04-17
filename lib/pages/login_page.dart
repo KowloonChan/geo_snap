@@ -19,16 +19,13 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Get the first user from the database and set it as the current user
-  Future<void> _loadCurrentUser() async {
-    User? currentUser = await DatabaseService.getUser();
-    if (currentUser != null) {
-      await saveUsername(currentUser);
-      setState(() {});
-    }
-  }
+  final _formKey = GlobalKey<FormState>();
 
-  // Save the current user's information to shared preferences for create, edit, and delete operations in the add page
+  String username = '';
+  String password = '';
+  bool isLoading = false;
+
+  // Save logged-in user to SharedPreferences
   Future<void> saveUsername(User currentUser) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userId', currentUser.userId!);
@@ -39,22 +36,108 @@ class _LoginPageState extends State<LoginPage> {
     await prefs.setString('topicPreference', currentUser.topicPreference);
   }
 
+  // LOGIN FUNCTION
+  void login() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      setState(() => isLoading = true);
+
+      User? user = await DatabaseService.authenticateUser(
+        username: username,
+        password: password,
+      );
+
+      setState(() => isLoading = false);
+
+      if (user != null) {
+        await saveUsername(user);
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MainScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Invalid username or password")),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Temporary login page with a button to skip to the home page
     return Scaffold(
       appBar: AppBar(title: Text("GeoSnap - Login")),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            _loadCurrentUser();
-            // Navigate to the main screen (home page) when the button is pressed
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => MainScreen()),
-            );
-          },
-          child: Text("Skip"),
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.camera_alt, size: 80),
+              SizedBox(height: 10),
+              Text(
+                "GeoSnap",
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
+
+              SizedBox(height: 30),
+
+              // USERNAME
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: "Username",
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Enter username";
+                  }
+                  return null;
+                },
+                onSaved: (value) => username = value!,
+              ),
+
+              SizedBox(height: 15),
+
+              // PASSWORD
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: "Password",
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.length < 4) {
+                    return "Password must be at least 4 characters";
+                  }
+                  return null;
+                },
+                onSaved: (value) => password = value!,
+              ),
+
+              SizedBox(height: 20),
+
+              // LOGIN BUTTON
+              ElevatedButton(
+                onPressed: isLoading ? null : login,
+                child: isLoading
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : Text("Login"),
+              ),
+
+              SizedBox(height: 20),
+
+              // TEST ACCOUNT INFO
+              Text(
+                "username: admin\npassword: admin123",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
         ),
       ),
     );
