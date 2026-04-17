@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+
+const API_KEY = "YUxoPHwKEK29AfNZriCF";
+
 class MapLocationPage extends StatelessWidget {
   final double lat;
   final double lon;
