@@ -90,7 +90,7 @@ class DatabaseService {
             debugPrint("photos tables created");
 
             // Seed initial categories and an user
-            Batch batch = await db.batch();
+            Batch batch = db.batch();
             for (String categoryName in BlogCategory.categoryNames) {
               batch.insert('categories', {'categoryName': categoryName});
             }
@@ -327,13 +327,39 @@ class DatabaseService {
   static Future<List<Photo>?> selectPhotosByPost(int postId) async {
     try {
       var db = await getDatabase();
-      var data = await db.query(
+      final idRows = await db.query(
         'photos',
+        columns: ['photoId'],
         where: 'postId = ?',
         whereArgs: [postId],
         orderBy: 'photoId ASC',
       );
-      return data.map(Photo.fromMap).toList();
+
+      final List<Photo> photos = [];
+      for (final row in idRows) {
+        final int? photoId = row['photoId'] as int?;
+        if (photoId == null) {
+          continue;
+        }
+
+        try {
+          final data = await db.query(
+            'photos',
+            where: 'photoId = ?',
+            whereArgs: [photoId],
+            limit: 1,
+          );
+          if (data.isNotEmpty) {
+            photos.add(Photo.fromMap(data.first));
+          }
+        } catch (e) {
+          debugPrint(
+            'Skipping oversized or invalid photo row photoId=$photoId for postId=$postId: $e',
+          );
+        }
+      }
+
+      return photos;
     } catch (e) {
       debugPrint("ERROR in selectPhotosByPost: $e");
       return null;

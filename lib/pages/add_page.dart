@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
@@ -36,8 +38,9 @@ class _AddPageState extends State<AddPage> {
       if (images.isNotEmpty) {
         for (var image in images) {
           final Uint8List bytes = await image.readAsBytes();
+          final Uint8List optimizedBytes = _optimizeImageBytes(bytes);
           setState(() {
-            _imagesBytesList.add(bytes);
+            _imagesBytesList.add(optimizedBytes);
           });
         }
       }
@@ -46,16 +49,40 @@ class _AddPageState extends State<AddPage> {
     }
   }
 
+  Future<void> _takePhoto() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 25,
+        maxWidth: 1000,
+      );
+
+      if (image == null) {
+        return;
+      }
+
+      final Uint8List bytes = await image.readAsBytes();
+      final Uint8List optimizedBytes = _optimizeImageBytes(bytes);
+      setState(() {
+        _imagesBytesList.add(optimizedBytes);
+      });
+    } catch (e) {
+      debugPrint("Error taking photo: $e");
+    }
+  }
+
   Future<void> _onSubmit() async {
     if (form.valid) {
+      final Position? position = await _getCurrentPosition();
+
       Post newPost = Post(
         userId: 1, // 模拟当前登录用户
         categoryId: form.control('categoryId').value as int,
         title: form.control('title').value as String,
         description: form.control('description').value as String,
         likesCount: 0,
-        latitude: 0.0, // TODO: 接入 Geolocation
-        longitude: 0.0,
+        latitude: position?.latitude ?? 0.0,
+        longitude: position?.longitude ?? 0.0,
         createdAt: DateTime.now().millisecondsSinceEpoch,
       );
 
@@ -81,6 +108,40 @@ class _AddPageState extends State<AddPage> {
     } else {
       form.markAllAsTouched();
     }
+  }
+
+  Future<Position?> _getCurrentPosition() async {
+    final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return null;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return null;
+    }
+
+    return Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+    );
+  }
+
+  Uint8List _optimizeImageBytes(Uint8List bytes) {
+    final img.Image? decoded = img.decodeImage(bytes);
+    if (decoded == null) {
+      return bytes;
+    }
+
+    final img.Image resized = decoded.width > 1280
+        ? img.copyResize(decoded, width: 1280)
+        : decoded;
+    final List<int> jpg = img.encodeJpg(resized, quality: 70);
+    return Uint8List.fromList(jpg);
   }
 
   @override
@@ -138,10 +199,24 @@ class _AddPageState extends State<AddPage> {
                 ),
               ),
             const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _pickMultiImages,
-              icon: const Icon(Icons.add_photo_alternate),
-              label: const Text("Select Photos"),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _pickMultiImages,
+                    icon: const Icon(Icons.add_photo_alternate),
+                    label: const Text("Select Photos"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _takePhoto,
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text("Take Photo"),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             ReactiveTextField<String>(

@@ -9,8 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_map: ^7.0.2
+  geolocator: ^13.0.2
+  image: ^4.2.0
   image_picker: ^1.2.1
   google_maps_flutter: ^2.5.3
+  latlong2: ^0.9.1
   path_provider: ^2.1.5
   reactive_forms: ^18.2.2
   shared_preferences: ^2.5.5
@@ -23,3 +27,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/logo.png
