@@ -5,6 +5,7 @@
  Description: an applications that allows users to post, view, like blog posts with photos
  */
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -94,13 +95,46 @@ class DatabaseService {
             for (String categoryName in BlogCategory.categoryNames) {
               batch.insert('categories', {'categoryName': categoryName});
             }
-            batch.insert('users', {
-              'username': 'admin',
-              'password': 'admin123',
-              'age': 25,
-              'gender': 'Other',
-              'topicPreference': 'General',
-            });
+            final seedUsers = [
+              {
+                'username': 'admin',
+                'password': 'admin123',
+                'age': 25,
+                'gender': 'Other',
+                'topicPreference': 'General',
+              },
+              {
+                'username': 'jaden',
+                'password': 'jaden123',
+                'age': 22,
+                'gender': 'Male',
+                'topicPreference': 'Technology',
+              },
+              {
+                'username': 'nayeong',
+                'password': 'nayeong123',
+                'age': 23,
+                'gender': 'Female',
+                'topicPreference': 'Travel',
+              },
+              {
+                'username': 'xuan',
+                'password': 'xuan123',
+                'age': 24,
+                'gender': 'Male',
+                'topicPreference': 'Food',
+              },
+              {
+                'username': 'kalung',
+                'password': 'kalung123',
+                'age': 24,
+                'gender': 'Male',
+                'topicPreference': 'Photography',
+              },
+            ];
+            for (final user in seedUsers) {
+              batch.insert('users', user);
+            }
             await batch.commit();
             debugPrint(
               "Inserted initial data into categories and users tables",
