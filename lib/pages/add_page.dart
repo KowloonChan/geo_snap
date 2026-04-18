@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:reactive_forms/reactive_forms.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:geo_snap/models/post.dart';
 import 'package:geo_snap/models/photo.dart';
@@ -74,9 +75,11 @@ class _AddPageState extends State<AddPage> {
   Future<void> _onSubmit() async {
     if (form.valid) {
       final Position? position = await _getCurrentPosition();
+      final prefs = await SharedPreferences.getInstance();
+      final currentUserId = prefs.getInt('userId') ?? 1;
 
       Post newPost = Post(
-        userId: 1, // 模拟当前登录用户
+        userId: currentUserId,
         categoryId: form.control('categoryId').value as int,
         title: form.control('title').value as String,
         description: form.control('description').value as String,
