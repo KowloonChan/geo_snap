@@ -16,9 +16,9 @@ import 'package:geo_snap/pages/delete_confirmation.dart';
 import 'map_location_page.dart';
 
 class PostDetailsPage extends StatefulWidget {
-  final Map<String, dynamic> postData;
+  final int postId;
 
-  const PostDetailsPage({super.key, required this.postData});
+  const PostDetailsPage({super.key, required this.postId});
 
   @override
   State<PostDetailsPage> createState() => _PostDetailsPageState();
@@ -26,13 +26,14 @@ class PostDetailsPage extends StatefulWidget {
 
 class _PostDetailsPageState extends State<PostDetailsPage> {
   late final Future<int?> _currentUserIdFuture;
-  late int _likesCount;
+  Map<String, dynamic>? _postData;
+  int _likesCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _likesCount = widget.postData['likesCount'] as int;
     _currentUserIdFuture = _loadCurrentUserId();
+    _loadData();
   }
 
   Future<int?> _loadCurrentUserId() async {
@@ -40,8 +41,21 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
     return prefs.getInt('userId');
   }
 
+  Future<void> _loadData() async {
+    final allPosts = await DatabaseService.selectPostsWithCategoryAndUser();
+    final post = allPosts?.firstWhere((p) => p['postId'] == widget.postId);
+    if (post != null) {
+      final photos = await DatabaseService.selectPhotosByPost(widget.postId);
+      setState(() {
+        _postData = {...post, 'photos': photos ?? []};
+        _likesCount = _postData!['likesCount'];
+      });
+    }
+  }
+
   bool _isOwner(int? currentUserId) {
-    final dynamic userIdValue = widget.postData['userId'];
+    if (_postData == null) return false;
+    final dynamic userIdValue = _postData!['userId'];
     final int? postOwnerId = userIdValue is int
         ? userIdValue
         : int.tryParse(userIdValue?.toString() ?? '');
@@ -51,21 +65,18 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
   }
 
   Future<void> _likePost() async {
-    setState(() {
-      _likesCount++;
-    });
-
+    if (_postData == null) return;
     try {
       Post updatedPost = Post(
-        postId: widget.postData['postId'],
-        userId: widget.postData['userId'],
-        categoryId: widget.postData['categoryId'],
-        title: widget.postData['title'],
-        description: widget.postData['description'],
-        likesCount: _likesCount,
-        latitude: widget.postData['latitude'],
-        longitude: widget.postData['longitude'],
-        createdAt: widget.postData['createdAt'],
+        postId: _postData!['postId'],
+        userId: _postData!['userId'],
+        categoryId: _postData!['categoryId'],
+        title: _postData!['title'],
+        description: _postData!['description'],
+        likesCount: _likesCount + 1,
+        latitude: _postData!['latitude'],
+        longitude: _postData!['longitude'],
+        createdAt: _postData!['createdAt'],
       );
 
       final result = await DatabaseService.updatePost(updatedPost);
@@ -75,10 +86,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
             const SnackBar(content: Text("Failed to update like count")),
           );
         }
-        // Revert the like count on failure
-        setState(() {
-          _likesCount--;
-        });
+      } else {
+        _loadData(); // Refresh data
       }
     } catch (e) {
       if (mounted) {
@@ -86,15 +95,14 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
           const SnackBar(content: Text("Error updating like count")),
         );
       }
-      // Revert the like count on error
-      setState(() {
-        _likesCount--;
-      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_postData == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     return FutureBuilder<int?>(
       future: _currentUserIdFuture,
       builder: (context, snapshot) {
@@ -103,28 +111,34 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
             _isOwner(snapshot.data);
         return Scaffold(
           appBar: AppBar(
-            title: Text(widget.postData['title']),
+            title: Text(_postData!['title']),
             actions: showActions
                 ? [
                     IconButton(
                       icon: const Icon(Icons.edit),
-                      onPressed: () {
-                        Navigator.push(
+                      onPressed: () async {
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => EditPage(
-                              postToEdit: Post.fromMap(widget.postData),
-                            ),
+                            builder: (context) =>
+                                EditPage(postToEdit: Post.fromMap(_postData!)),
                           ),
                         );
+                        if (result == true) {
+                          _loadData();
+                        }
                       },
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete),
                       onPressed: () {
-                        DeleteConfirmationDialog.show(
+                        Navigator.push(
                           context,
-                          widget.postData['postId'],
+                          MaterialPageRoute(
+                            builder: (context) => DeleteConfirmationPage(
+                              postId: _postData!['postId'],
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -135,46 +149,36 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FutureBuilder<List<Photo>?>(
-                  future: DatabaseService.selectPhotosByPost(
-                    widget.postData['postId'],
-                  ),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      debugPrint('Error loading photos: ${snapshot.error}');
-                    }
-                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Container(
-                        height: 250,
-                        width: double.infinity,
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.image_not_supported, size: 50),
-                      );
-                    }
-                    return SizedBox(
-                      height: 250,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: snapshot.data!.length,
-                        itemBuilder: (context, index) => Padding(
-                          padding: const EdgeInsets.only(right: 4.0),
-                          child: Image.memory(
-                            snapshot.data![index].photoBlob,
-                            fit: BoxFit.cover,
-                            width: 300,
-                          ),
+                if (_postData!['photos'].isEmpty)
+                  Container(
+                    height: 250,
+                    width: double.infinity,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.image_not_supported, size: 50),
+                  )
+                else
+                  SizedBox(
+                    height: 250,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _postData!['photos'].length,
+                      itemBuilder: (context, index) => Padding(
+                        padding: const EdgeInsets.only(right: 4.0),
+                        child: Image.memory(
+                          _postData!['photos'][index].photoBlob,
+                          fit: BoxFit.cover,
+                          width: 300,
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.postData['description'],
+                        _postData!['description'],
                         style: const TextStyle(fontSize: 16),
                       ),
                       const SizedBox(height: 20),
@@ -185,16 +189,16 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                         ),
                         title: const Text("View Location on Map"),
                         subtitle: Text(
-                          "Lat: ${widget.postData['latitude']}, Lon: ${widget.postData['longitude']}",
+                          "Lat: ${_postData!['latitude']}, Lon: ${_postData!['longitude']}",
                         ),
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => MapLocationPage(
-                                lat: widget.postData['latitude'],
-                                lon: widget.postData['longitude'],
-                                title: widget.postData['title'],
+                                lat: _postData!['latitude'],
+                                lon: _postData!['longitude'],
+                                title: _postData!['title'],
                               ),
                             ),
                           );

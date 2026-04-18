@@ -61,7 +61,7 @@ class _EditPageState extends State<EditPage> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Post Updated!')));
-        Navigator.pop(context); // 更新完成后返回上一页（详情页或主页）
+        Navigator.pop(context, updatedPost); // 返回更新的帖子
       }
     } else {
       form.markAllAsTouched();
