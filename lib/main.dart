@@ -12,8 +12,6 @@ import 'package:geo_snap/pages/profile_page.dart';
 import 'package:geo_snap/pages/splash_screen.dart';
 import 'package:geo_snap/services/database_service.dart';
 
-const API_KEY = "YUxoPHwKEK29AfNZriCF";
-
 Future<void> main() async {
   // Initialize the database before running the app
   WidgetsFlutterBinding.ensureInitialized();

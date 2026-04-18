@@ -127,15 +127,6 @@ class _LoginPageState extends State<LoginPage> {
                     ? CircularProgressIndicator(color: Colors.white)
                     : Text("Login"),
               ),
-
-              SizedBox(height: 20),
-
-              // TEST ACCOUNT INFO
-              Text(
-                "username: admin\npassword: admin123",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
             ],
           ),
         ),

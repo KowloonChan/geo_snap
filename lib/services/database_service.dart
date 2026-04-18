@@ -129,7 +129,7 @@ class DatabaseService {
                 'password': 'kalung123',
                 'age': 24,
                 'gender': 'Male',
-                'topicPreference': 'Photography',
+                'topicPreference': 'Business',
               },
             ];
             for (final user in seedUsers) {
@@ -223,18 +223,17 @@ class DatabaseService {
     }
   }
 
-  // For testing only - get the first user (admin) and set it as the current user
-  // TODO: it should select the login user based on the authenticateUser() result
-  static Future<User?> getUser() async {
+  // Select user by username
+  static Future<User?> getUser({required String username}) async {
     try {
       var db = await getDatabase();
       var data = await db.query(
         'users',
-        where: 'userId = ?',
-        whereArgs: [1],
+        where: 'username = ?',
+        whereArgs: [username],
         limit: 1,
       );
-      debugPrint("First user retrieved successfully");
+      debugPrint("User retrieved successfully: $username");
       return data.isNotEmpty ? User.fromMap(data.first) : null;
     } catch (e) {
       debugPrint("ERROR in getUser: $e");
@@ -401,19 +400,20 @@ class DatabaseService {
   }
 
   // ----------------- Delete everything -----------------
-  static Future<void> clearAllData() async {
-    try {
-      var db = await getDatabase();
-      await db.delete('photos');
-      await db.delete('posts');
-      await db.delete('users');
-      await db.delete('categories');
-      debugPrint("All data cleared successfully");
-    } catch (e) {
-      debugPrint("ERROR in clearAllData: $e");
-    }
-  }
+  // static Future<void> clearAllData() async {
+  //   try {
+  //     var db = await getDatabase();
+  //     await db.delete('photos');
+  //     await db.delete('posts');
+  //     await db.delete('users');
+  //     await db.delete('categories');
+  //     debugPrint("All data cleared successfully");
+  //   } catch (e) {
+  //     debugPrint("ERROR in clearAllData: $e");
+  //   }
+  // }
 
+  // Select posts with category name and username for displaying in the home page
   static Future<List<Map<String, dynamic>>?>
   selectPostsWithCategoryAndUser() async {
     try {
