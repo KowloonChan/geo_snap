@@ -12,7 +12,7 @@ import 'package:geo_snap/models/category.dart';
 import 'package:geo_snap/services/database_service.dart';
 
 class EditPage extends StatefulWidget {
-  final Post postToEdit; // 必须传入要编辑的帖子
+  final Post postToEdit; // The post to be edited
 
   const EditPage({super.key, required this.postToEdit});
 
@@ -32,7 +32,7 @@ class _EditPageState extends State<EditPage> {
       'categoryId': FormControl<int>(validators: [Validators.required]),
     });
 
-    // 将传入的帖子数据填充到表单中
+    // Fill the post data into the form
     form.patchValue({
       'title': widget.postToEdit.title,
       'description': widget.postToEdit.description,
@@ -42,7 +42,7 @@ class _EditPageState extends State<EditPage> {
 
   Future<void> _onSubmit() async {
     if (form.valid) {
-      // 保持原有 postId, userId, likesCount, location 和 createdAt 不变，只更新文本和类别
+      // Only able to update the text fields and category, everything else will not be changable
       Post updatedPost = Post(
         postId: widget.postToEdit.postId,
         userId: widget.postToEdit.userId,
@@ -55,13 +55,17 @@ class _EditPageState extends State<EditPage> {
         createdAt: widget.postToEdit.createdAt,
       );
 
+      // Call the database service method to update the post
       await DatabaseService.updatePost(updatedPost);
 
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Post Updated!')));
-        Navigator.pop(context, updatedPost); // 返回更新的帖子
+        Navigator.pop(
+          context,
+          updatedPost,
+        ); // Return the updated post to the previous page
       }
     } else {
       form.markAllAsTouched();
@@ -71,7 +75,7 @@ class _EditPageState extends State<EditPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Edit Post")),
+      appBar: AppBar(title: Text("Edit Post")),
       body: ReactiveForm(
         formGroup: form,
         child: ListView(
@@ -79,24 +83,24 @@ class _EditPageState extends State<EditPage> {
           children: [
             ReactiveTextField<String>(
               formControlName: 'title',
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: "Title",
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             ReactiveTextField<String>(
               formControlName: 'description',
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: "Description",
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             ReactiveDropdownField<int>(
               formControlName: 'categoryId',
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: "Category",
                 border: OutlineInputBorder(),
               ),
@@ -107,11 +111,8 @@ class _EditPageState extends State<EditPage> {
                 );
               }).toList(),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _onSubmit,
-              child: const Text("Save Changes"),
-            ),
+            SizedBox(height: 24),
+            ElevatedButton(onPressed: _onSubmit, child: Text("Save Changes")),
           ],
         ),
       ),

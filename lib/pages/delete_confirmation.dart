@@ -10,7 +10,7 @@ import 'package:geo_snap/services/database_service.dart';
 class DeleteConfirmationPage extends StatelessWidget {
   final int postId;
 
-  const DeleteConfirmationPage({super.key, required this.postId});
+  DeleteConfirmationPage({super.key, required this.postId});
 
   @override
   Widget build(BuildContext context) {
@@ -53,9 +53,7 @@ class DeleteConfirmationPage extends StatelessWidget {
                         Navigator.of(context).pop(); // pop details
 
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Post deleted successfully'),
-                          ),
+                          SnackBar(content: Text('Post deleted successfully')),
                         );
                       }
                     },

@@ -150,7 +150,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 ReactiveDropdownField<String>(
                   formControlName: 'topicPreference',
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     // labelText: "Topic Preference",
                     border: OutlineInputBorder(),
                   ),

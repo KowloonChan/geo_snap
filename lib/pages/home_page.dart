@@ -34,7 +34,6 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.all(8.0),
           child: DropdownButton<String>(
             value: selectedCategory,
-            // 修复点：添加泛型并确保 toString()，解决类型报错
             items: ['All', ...BlogCategory.categoryNames]
                 .map<DropdownMenuItem<String>>((dynamic value) {
                   return DropdownMenuItem<String>(
@@ -60,10 +59,10 @@ class _HomePageState extends State<HomePage> {
               future: DatabaseService.selectPostsWithCategoryAndUser(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(child: CircularProgressIndicator());
                 }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text("No posts found."));
+                  return Center(child: Text("No posts found."));
                 }
 
                 final posts = snapshot.data!;
@@ -87,14 +86,13 @@ class _HomePageState extends State<HomePage> {
                       elevation: 4,
                       child: ListTile(
                         title: Text(
-                          // 修复点：安全转换为 String
                           post['title']?.toString() ?? 'Untitled',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
                           "By: ${post['username']} • ${post['categoryName']}",
                         ),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        trailing: Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -108,11 +106,11 @@ class _HomePageState extends State<HomePage> {
                     );
                   },
                 );
-              }, // 闭合 builder
-            ), // 闭合 FutureBuilder
-          ), // 闭合 RefreshIndicator
-        ), // 闭合 Expanded
-      ], // 闭合 Column 的 children
-    ); // 闭合 Column
+              },
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

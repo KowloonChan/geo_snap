@@ -101,7 +101,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
   @override
   Widget build(BuildContext context) {
     if (_postData == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return FutureBuilder<int?>(
       future: _currentUserIdFuture,
@@ -115,7 +115,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
             actions: showActions
                 ? [
                     IconButton(
-                      icon: const Icon(Icons.edit),
+                      icon: Icon(Icons.edit),
                       onPressed: () async {
                         final result = await Navigator.push(
                           context,
@@ -130,7 +130,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                       },
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete),
+                      icon: Icon(Icons.delete),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -154,7 +154,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                     height: 250,
                     width: double.infinity,
                     color: Colors.grey[300],
-                    child: const Icon(Icons.image_not_supported, size: 50),
+                    child: Icon(Icons.image_not_supported, size: 50),
                   )
                 else
                   SizedBox(
@@ -179,15 +179,12 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                     children: [
                       Text(
                         _postData!['description'],
-                        style: const TextStyle(fontSize: 16),
+                        style: TextStyle(fontSize: 16),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                       ListTile(
-                        leading: const Icon(
-                          Icons.location_on,
-                          color: Colors.blue,
-                        ),
-                        title: const Text("View Location on Map"),
+                        leading: Icon(Icons.location_on, color: Colors.blue),
+                        title: Text("View Location on Map"),
                         subtitle: Text(
                           "Lat: ${_postData!['latitude']}, Lon: ${_postData!['longitude']}",
                         ),
@@ -204,13 +201,13 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                           );
                         },
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       ListTile(
-                        leading: const Icon(Icons.favorite, color: Colors.red),
-                        title: const Text("Likes"),
+                        leading: Icon(Icons.favorite, color: Colors.red),
+                        title: Text("Likes"),
                         subtitle: Text("$_likesCount people liked this"),
                         trailing: IconButton(
-                          icon: const Icon(Icons.thumb_up, color: Colors.blue),
+                          icon: Icon(Icons.thumb_up, color: Colors.blue),
                           onPressed: _likePost,
                         ),
                       ),
