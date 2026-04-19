@@ -15,24 +15,24 @@ class DeleteConfirmationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Delete Post')),
+      appBar: AppBar(title: Text('Delete Post')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 'Are you sure you want to delete this post? This action cannot be undone.',
                 style: TextStyle(fontSize: 18),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
-                    child: const Text('Cancel'),
+                    child: Text('Cancel'),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
@@ -41,17 +41,18 @@ class DeleteConfirmationPage extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                     ),
-                    child: const Text(
+                    child: Text(
                       'Delete',
                       style: TextStyle(color: Colors.white),
                     ),
                     onPressed: () async {
+                      // Call the delete function from the database service
                       await DatabaseService.deletePost(postId);
-
+                      // After deletion, pop back to the previous screen and show a confirmation message
                       if (context.mounted) {
-                        Navigator.of(context).pop(); // pop confirmation
-                        Navigator.of(context).pop(); // pop details
-
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
+                        // Show a snackbar to confirm deletion
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Post deleted successfully')),
                         );

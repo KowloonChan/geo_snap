@@ -181,6 +181,7 @@ class _AddPageState extends State<AddPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // Display the selected images in list view
             if (_imagesBytesList.isNotEmpty)
               SizedBox(
                 height: 120,
@@ -197,7 +198,7 @@ class _AddPageState extends State<AddPage> {
                             borderRadius: BorderRadius.circular(8),
                             image: DecorationImage(
                               image: Image.memory(
-                                _imagesBytesList[index],
+                                _imagesBytesList[index], // Display the image from _imagesBytesList
                               ).image,
                               fit: BoxFit.cover,
                             ),
@@ -214,6 +215,7 @@ class _AddPageState extends State<AddPage> {
                               radius: 12,
                               backgroundColor: Colors.red,
                               child: Icon(
+                                // A small 'X' icon to delete the image
                                 Icons.close,
                                 size: 16,
                                 color: Colors.white,
@@ -227,6 +229,7 @@ class _AddPageState extends State<AddPage> {
                 ),
               ),
             SizedBox(height: 16),
+            // Two buttons to select images from gallery or take photo using camera
             Row(
               children: [
                 Expanded(
@@ -255,6 +258,7 @@ class _AddPageState extends State<AddPage> {
               ),
             ),
             SizedBox(height: 16),
+            // Text field for description
             ReactiveTextField<String>(
               formControlName: 'description',
               decoration: InputDecoration(
@@ -264,6 +268,7 @@ class _AddPageState extends State<AddPage> {
               maxLines: 3,
             ),
             SizedBox(height: 16),
+            // Dropdown for category selection
             ReactiveDropdownField<int>(
               formControlName: 'categoryId',
               decoration: InputDecoration(
@@ -278,6 +283,7 @@ class _AddPageState extends State<AddPage> {
               }).toList(),
             ),
             SizedBox(height: 24),
+            // Submit button
             ElevatedButton(onPressed: _onSubmit, child: Text("Publish Post")),
           ],
         ),

@@ -26,6 +26,7 @@ class _EditPageState extends State<EditPage> {
   @override
   void initState() {
     super.initState();
+    // Initialize the form with the current post data
     form = FormGroup({
       'title': FormControl<String>(validators: [Validators.required]),
       'description': FormControl<String>(validators: [Validators.required]),
@@ -59,6 +60,7 @@ class _EditPageState extends State<EditPage> {
       await DatabaseService.updatePost(updatedPost);
 
       if (mounted) {
+        // Show a snackbar to confirm
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Post Updated!')));
