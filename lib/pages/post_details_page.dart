@@ -16,7 +16,8 @@ import 'package:geo_snap/pages/delete_confirmation.dart';
 import 'map_location_page.dart';
 
 class PostDetailsPage extends StatefulWidget {
-  final int postId;
+  final int
+  postId; // The ID passed from the previous screen to know which post to load.
 
   const PostDetailsPage({super.key, required this.postId});
 
@@ -24,6 +25,7 @@ class PostDetailsPage extends StatefulWidget {
   State<PostDetailsPage> createState() => _PostDetailsPageState();
 }
 
+//This manages the loading of post data, checking if the current user is the owner of the post, and handling the like functionality.
 class _PostDetailsPageState extends State<PostDetailsPage> {
   late final Future<int?> _currentUserIdFuture;
   Map<String, dynamic>? _postData;
@@ -36,11 +38,14 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
     _loadData();
   }
 
+  // This method retrieves the current user's ID from shared preferences,
+  //which is used to determine if the user is the owner of the post and to manage like functionality.
   Future<int?> _loadCurrentUserId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt('userId');
   }
 
+  // This method loads the post data from the database to display this information on the UI.
   Future<void> _loadData() async {
     final allPosts = await DatabaseService.selectPostsWithCategoryAndUser();
     final post = allPosts?.firstWhere((p) => p['postId'] == widget.postId);
@@ -53,6 +58,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
     }
   }
 
+  // This method checks if the current user is the owner of the post by comparing the user ID from the post data
+  //with the current user's ID.
   bool _isOwner(int? currentUserId) {
     if (_postData == null) return false;
     final dynamic userIdValue = _postData!['userId'];
@@ -64,6 +71,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
         postOwnerId == currentUserId;
   }
 
+  //This method handles the logic for liking a post, including updating the like count locally and in the database,
+  // and providing feedback to the user if the operation fails.
   Future<void> _likePost() async {
     if (_postData == null) return;
     try {
@@ -79,6 +88,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
         createdAt: _postData!['createdAt'],
       );
 
+      // The like count is incremented locally first to provide immediate feedback to the user,
+      //and then the updated post is sent to the database to update the like count persistently
       final result = await DatabaseService.updatePost(updatedPost);
       if (result == null) {
         if (mounted) {
@@ -87,22 +98,29 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
           );
         }
       } else {
-        _loadData(); // Refresh data
+        _loadData(); // Refresh the data
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Error updating like count")),
+          const SnackBar(
+            content: Text(
+              "Error updating like count",
+            ), // Show a generic error message if something goes wrong during the like operation.
+          ),
         );
       }
     }
   }
 
   @override
+  // The main build method that constructs the UI of the post details page, including the post's title, description, photos, location, and like functionality.
   Widget build(BuildContext context) {
     if (_postData == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+    // The FutureBuilder is used to determine if the current user is the owner of the post,
+    //which controls whether the edit and delete buttons are shown in the app bar.
     return FutureBuilder<int?>(
       future: _currentUserIdFuture,
       builder: (context, snapshot) {
@@ -114,6 +132,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
             title: Text(_postData!['title']),
             actions: showActions
                 ? [
+                    // If the current user is the owner of the post, show edit and delete buttons in the app bar.
                     IconButton(
                       icon: const Icon(Icons.edit),
                       onPressed: () async {
@@ -129,6 +148,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                         }
                       },
                     ),
+                    // The delete button navigates to a confirmation page before actually deleting the post.
                     IconButton(
                       icon: const Icon(Icons.delete),
                       onPressed: () {
@@ -145,6 +165,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                   ]
                 : [],
           ),
+          // The body of the page displays the post's photos in a horizontal list,
+          //the description, location information with a link to view on the map, and the like count with a button to like the post.
           body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,6 +194,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                       ),
                     ),
                   ),
+                // The description, location, and like information are displayed below the photos in a column layout.
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -192,6 +215,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                           "Lat: ${_postData!['latitude']}, Lon: ${_postData!['longitude']}",
                         ),
                         onTap: () {
+                          // When the location tile is tapped, it navigates to the MapLocationPage,
+                          //passing the latitude, longitude, and title of the post to display the location on a map.
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -204,6 +229,8 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                           );
                         },
                       ),
+                      // The like section shows the number of likes and includes a button to like the post,
+                      // which updates the like count in the database and refreshes the UI.
                       const SizedBox(height: 10),
                       ListTile(
                         leading: const Icon(Icons.favorite, color: Colors.red),

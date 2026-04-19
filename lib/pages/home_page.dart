@@ -16,6 +16,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
+// The HomePage widget displays a list of blog posts with a category filter and pull-to-refresh functionality.
 class _HomePageState extends State<HomePage> {
   String? selectedCategory = 'All';
   int _refreshCounter = 0;
@@ -27,7 +28,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  // The build method constructs the UI of the HomePage, including a dropdown for category selection and a list of posts.
   Widget build(BuildContext context) {
+    // The Column widget arranges the dropdown and the list of posts vertically.
     return Column(
       children: [
         Padding(
@@ -50,11 +53,13 @@ class _HomePageState extends State<HomePage> {
             },
           ),
         ),
+        // The Expanded widget allows the list of posts to take up the remaining space in the column.
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async {
               _refreshData();
             },
+            // The FutureBuilder widget is used to fetch and display the list of posts from the database.
             child: FutureBuilder<List<Map<String, dynamic>>?>(
               key: ValueKey(_refreshCounter),
               future: DatabaseService.selectPostsWithCategoryAndUser(),
@@ -66,6 +71,8 @@ class _HomePageState extends State<HomePage> {
                   return const Center(child: Text("No posts found."));
                 }
 
+                // The posts are filtered based on the selected category,
+                //and a ListView.builder is used to display the list of posts.
                 final posts = snapshot.data!;
                 final filteredPosts = selectedCategory == 'All'
                     ? posts
