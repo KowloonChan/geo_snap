@@ -24,6 +24,7 @@ class DatabaseService {
     debugPrint(dbDirectory.toString());
     String path = "trueReview.db";
 
+    // Create the database if it doesn't exist, otherwise open the existing one
     if (_db == null) {
       debugPrint("_db is null, creating a new one or opening an existing");
       try {
@@ -90,7 +91,7 @@ class DatabaseService {
 
             debugPrint("photos tables created");
 
-            // Seed initial categories and an user
+            // Seed categories and users
             Batch batch = db.batch();
             for (String categoryName in BlogCategory.categoryNames) {
               batch.insert('categories', {'categoryName': categoryName});
@@ -136,9 +137,7 @@ class DatabaseService {
               batch.insert('users', user);
             }
             await batch.commit();
-            debugPrint(
-              "Inserted initial data into categories and users tables",
-            );
+            debugPrint("Inserted data into categories and users tables");
           },
           onOpen: (db) {
             debugPrint('Database opened');
@@ -198,6 +197,7 @@ class DatabaseService {
     }
   }
 
+  // Simple authentication function for login
   static Future<User?> authenticateUser({
     required String username,
     required String password,
@@ -241,7 +241,7 @@ class DatabaseService {
     }
   }
 
-  // Update user information in the database when the user edits their profile
+  // Update user information in the database after the user saves their profile
   static Future<int?> updateUser(User user) async {
     try {
       var db = await getDatabase();
@@ -258,6 +258,7 @@ class DatabaseService {
   }
 
   // ----------------- CRUD for Post -----------------
+  // Add a new post
   static Future<int?> insertPost(Post post) async {
     try {
       var db = await getDatabase();
@@ -268,6 +269,7 @@ class DatabaseService {
     }
   }
 
+  // Update an existing post
   static Future<int?> updatePost(Post post) async {
     try {
       var db = await getDatabase();
@@ -283,6 +285,7 @@ class DatabaseService {
     }
   }
 
+  // Delete a post by its ID
   static Future<int?> deletePost(int postId) async {
     try {
       var db = await getDatabase();
@@ -293,6 +296,7 @@ class DatabaseService {
     }
   }
 
+  // Select all posts, sorted by newest
   static Future<List<Post>?> selectAllPosts() async {
     try {
       var db = await getDatabase();
@@ -304,6 +308,7 @@ class DatabaseService {
     }
   }
 
+  // Select posts by a specific user, sorted by newest
   static Future<List<Post>?> selectPostsByUser(int userId) async {
     try {
       var db = await getDatabase();
@@ -320,6 +325,7 @@ class DatabaseService {
     }
   }
 
+  // Select posts by category, sorted by newest
   static Future<List<Post>?> selectPostsByCategory(int categoryId) async {
     try {
       var db = await getDatabase();
@@ -337,6 +343,7 @@ class DatabaseService {
   }
 
   // ----------------- CRUD for Photo -----------------
+  // Add a new photo
   static Future<int?> insertPhoto(Photo photo) async {
     try {
       var db = await getDatabase();
@@ -347,6 +354,7 @@ class DatabaseService {
     }
   }
 
+  // Delete a photo by its ID
   static Future<int?> deletePhoto(int photoId) async {
     try {
       var db = await getDatabase();
@@ -357,6 +365,7 @@ class DatabaseService {
     }
   }
 
+  // Select photos by post ID, sorted by photoId
   static Future<List<Photo>?> selectPhotosByPost(int postId) async {
     try {
       var db = await getDatabase();
@@ -442,6 +451,7 @@ class DatabaseService {
     }
   }
 
+  // For testing only: seed a demo photo for a post
   static Future<void> seedDemoPhoto(int postId, Uint8List photoBlob) async {
     try {
       await insertPhoto(

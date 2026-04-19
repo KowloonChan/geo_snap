@@ -21,10 +21,11 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  // Save the userId for update databsase
+  // Save the userId for updating databsase
   int? userId;
 
-  // The profile page with a form to display username, age, gender, and topic preference of the current user retrived from shared preferences, and allow the user to edit and save the information back to the database and shared preferences
+  // The profile page with a form to display current login user details
+  // allow the user to edit and save the information back to the database and shared preferences
   // Form controls
   FormGroup form = FormGroup({
     "userName": FormControl<String>(
@@ -81,7 +82,7 @@ class _ProfilePageState extends State<ProfilePage> {
     form.control('topicPreference').value = topicPreference;
   }
 
-  // Display the current user's information in a form and allow the user to edit and save the information back to the database and shared preferences
+  // Display the current user's information in a form
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,6 +95,7 @@ class _ProfilePageState extends State<ProfilePage> {
             16,
             16 + MediaQuery.of(context).viewInsets.bottom,
           ),
+          // Form start here
           child: ReactiveForm(
             formGroup: form,
             child: Column(
@@ -111,9 +113,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   },
                 ),
 
+                // Text input for password
                 ReactiveTextField<String>(
                   formControlName: 'password',
                   decoration: InputDecoration(labelText: 'Password'),
+                  // Mask the password
                   obscureText: true,
                   validationMessages: {
                     "required": (err) => "Password is required",
@@ -124,6 +128,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   },
                 ),
 
+                // Number input for age
                 ReactiveTextField<int>(
                   formControlName: 'age',
                   decoration: InputDecoration(labelText: 'Age'),
@@ -135,6 +140,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   },
                 ),
 
+                // Dropdown for gender
                 ReactiveDropdownField<String>(
                   formControlName: 'gender',
                   decoration: InputDecoration(labelText: 'Gender'),
@@ -148,10 +154,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   },
                 ),
 
+                // Add space
+                SizedBox(height: 12),
+
+                // Dropdown for topic preference
                 ReactiveDropdownField<String>(
                   formControlName: 'topicPreference',
-                  decoration: const InputDecoration(
-                    // labelText: "Topic Preference",
+                  decoration: InputDecoration(
+                    labelText: "Topic Preference",
                     border: OutlineInputBorder(),
                   ),
                   items: BlogCategory.categoryNames.asMap().entries.map((
@@ -170,10 +180,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 SizedBox(height: 20),
 
+                // Button to save changes
                 ElevatedButton(
                   onPressed: () async {
                     if (form.valid) {
-                      // Creqate the updated User
+                      // Create the updated User
                       User updatedUser = User(
                         userId: userId,
                         username: form.control('userName').value as String,
@@ -230,18 +241,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   },
                   child: Text("Logout"),
                 ),
-
-                // A button go to the testing page to test database operations, to be deleted in the final version
-                // TODO: delete this button and the testing page after testing is done
-                // ElevatedButton(
-                //   onPressed: () {
-                //     Navigator.push(
-                //       context,
-                //       MaterialPageRoute(builder: (context) => TestingPage()),
-                //     );
-                //   },
-                //   child: Text("Go to Testing Page"),
-                // ),
               ],
             ),
           ),

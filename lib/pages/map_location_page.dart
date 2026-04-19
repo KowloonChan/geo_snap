@@ -46,11 +46,7 @@ class MapLocationPage extends StatelessWidget {
                 point: postLocation,
                 width: 80,
                 height: 80,
-                child: const Icon(
-                  Icons.pin_drop,
-                  color: Colors.deepOrange,
-                  size: 50,
-                ),
+                child: Icon(Icons.pin_drop, color: Colors.deepOrange, size: 50),
               ),
             ],
           ),
