@@ -18,14 +18,16 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
+// GlobalKey is used to validate and manage the form state
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-
+  // Variables to store user input
   String username = '';
   String password = '';
   bool isLoading = false;
 
-  // Save logged-in user to SharedPreferences
+  // Save logged-in user information into SharedPreferences
+  // This allows other screens (like Add/Edit Post) to access the current user
   Future<void> saveUsername(User currentUser) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('userId', currentUser.userId!);
@@ -36,7 +38,7 @@ class _LoginPageState extends State<LoginPage> {
     await prefs.setString('topicPreference', currentUser.topicPreference);
   }
 
-  // LOGIN FUNCTION
+  // Login function
   void login() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -71,6 +73,7 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(title: Text("GeoSnap - Login")),
       body: Padding(
         padding: EdgeInsets.all(16),
+        // Form start here
         child: Form(
           key: _formKey,
           child: Column(
@@ -85,12 +88,13 @@ class _LoginPageState extends State<LoginPage> {
 
               SizedBox(height: 30),
 
-              // USERNAME
+              // Username
               TextFormField(
                 decoration: InputDecoration(
                   labelText: "Username",
                   border: OutlineInputBorder(),
                 ),
+                // Validate username field
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return "Enter username";
@@ -102,13 +106,14 @@ class _LoginPageState extends State<LoginPage> {
 
               SizedBox(height: 15),
 
-              // PASSWORD
+              // Password
               TextFormField(
                 decoration: InputDecoration(
                   labelText: "Password",
                   border: OutlineInputBorder(),
                 ),
                 obscureText: true,
+                // Validate password field
                 validator: (value) {
                   if (value == null || value.length < 4) {
                     return "Password must be at least 4 characters";
@@ -120,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
 
               SizedBox(height: 20),
 
-              // LOGIN BUTTON
+              // Login button
               ElevatedButton(
                 onPressed: isLoading ? null : login,
                 child: isLoading
